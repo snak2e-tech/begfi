@@ -49,7 +49,7 @@
    - **At the end of The Box Prompt information to be Verified receive a box to go "Next" and the "Next" button takes them to Civic:**
    - Overlaid UI (over begfi) website after "Next button" of Civic over begfi
 	   - https://docs.civic.com/integration-guides/civic-pass/integration-overview/ui-integration
-	  
+	   - ![[ภาพถ่ายหน้าจอ 2024-07-20 เวลา 06.36.56.png]]
      - Prompt user to connect to Civic and verify their "UNIQUENESS" attribute. 
 	     - This takes them from Begfi
      - **Civic Verification Documentation:**
@@ -113,41 +113,73 @@
 ## Lender Response
 
 9. **Lender Notification:** 
+ Front-end website from UI/UX perspective:
    - The system identifies potential lenders and notifies them about the loan request.
-   - The lender can also see in the message board new borrower requests
+	   - Website can filter:
+		   - most recent borrower requests
+		   - borrower requests by size
+		   - first-time borrower requests (because these get higher rewards when a lender successfully lends to them)
+   - The lender can also see in the message board new borrower requests by just scrolling
 
-10. **Lender Decision:**
+11. **Lender Decision:**
+   - Lender looks at a borrower's request
    - The lender decides whether to accept or reject the request.
+   - Once again the request looks like I need to borrow "X" amount of money for "Y" days and will payback "Y" amount because of reason (from a multiple choice dropdown) "Z" reason.
+   - There is a button to send borrower the loan under each username request on the message board
 
-11. Process after Lender accepts request and sends money
-	1. After money is sent a box prompt tells Lender they have loaned an amount of money to the borrower
-	2. Additional information can include:
-		1. Once the loan is paid off how many rewards the lender will receive
-		2. Prompt if they need a notification once the loan is repaid
-			-  Some people may make so many loans that they do not want to be inundated with loan notifications.
-			- Some people, in the future, post-MVP will want to have option to talk to the borrower and potentially extend a loan if needed
-				- This would require a message system though
+12. What is the Process after Lender accepts request and sends money?
+	- Lender hits the button "Send Loan" 
+		- This creates a prompt from Metamask to send that EXACT amount
+	- After money is sent a box prompt tells Lender they have loaned an amount of money to the borrower, i.e. "Nice job! You have lent "X" username money"
+	- Additional information can include:
+		- Once the loan is paid off how many rewards the lender will receive
+		- **Prompt if they need a notification once the loan is repaid**
+			- Lender can put a messaging service like Telegram to inform them when loan is due. 
+			- Issue: lenders may not want to do notifications though. They're busy people. Likely, no one uses the notifications option.
 
 ## Lender Accepts (Smart Contract & Blockchain)
 
 13. **Lender Approval:**
    - Upon confirmation, the lender submits a transaction via their wallet to approve the loan.
-   -  Money is sent
-		-  The smart contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request.
-	- Information only includes the wallet address of who it was sent to (so we can fetch this info later for our loan bot)
-- No BEG token rewards will be automatically distributed after the initial transferLender's message on Message board shows reply "Loan Sent"
-   - Smart contract then leads to a blockchain query to confirm it went to the right person according the borrower ID and wallet address. 
-	   - Once money is sent, wording on message board goes from "Borrower Request" to "Loan Disbursed"
-	   - "Request" also goes to "Unpaid yet"
-	   - When paid back it goes from "Loan paid back "Loan Repaid" and "Request" to "Paid"
+   -  Money is sent.
+	   - In order for this to work, the Borrower cannot simply send the money to the lender's address. **Therefore, the lender's address should be HIDDEN inside of a box.** 
+	   - ***Neither the lender nor the borrower can see each other's addresses***
+		   - This prevents the borrower from mistakenly using another wallet and entering in the lender's address (because they now know it)
+		   - Using some weird way to actually find the lender's identity by tracing their wallet address
+		   - This is a maximum safety feature
+	   - The QUERY process from the time the button for the Lender to push "Send Loan" occurs follows:
+		-  Wallet opens
+		- Lender confirms
+		- Smart contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request.
+		- The Graph opens a query to check if this has happened
+		- The SQL database is updated through a python script fetch and adds The Graph query
+			- USERNAME ID of borrower
+			- USERNAME ID of lender
+			- Check if the loan was the correct amount according to what the Lender requested
+			- Check if the loan was sent to the borrower's wallet
+			- If so then the message board is updated as: 
+				- "Loan Disbursed" 
+				- Request" also goes to "Unpaid yet"
+				- When paid back it goes from "Loan paid back "Loan Repaid" and "Request" to "Paid"
+	   
+- No BEG token rewards will be automatically distributed UNTIL after the money is paid back 
 ## Blockchain Transaction & SQL Entry
 
 14. **Blockchain Query:**
    - Begfi uses the blockchain's API to query the transaction and confirm if the funds (`$AMOUNTREQUEST`) have been transferred to the smart contract.
+   - This query occurs across all loans every 30 seconds.
+   - The cost of this for 5000 loans PER MONTH is $8
+   - If such a situation where 1) total sum does not equal $75 (where the borrower has not paid in full) or has paid in batches so that you just look at all the transactions from person A to person B, between the time when the loan was given and the loan is due, and add the numbers up.
+   - Create the query, in The Graph, [https://www.youtube.com/watch?v=EJ2em_QkQWU](https://www.youtube.com/watch?v=EJ2em_QkQWU) (doc video explaining how to create query) whereby it checks every 3 minutes if Lender's wallet has received Borrower's transfer from Borrower's wallet. And if it is in small batches, the entire sum at once, and so on, it sums up and equals the correct amount and therefore creates a trigger:  
+	   - “Loan Sent"  
+	   - "Not paid"  
+	   - “Paid"
+- Finally, POST-MVP, In the rare instance that there’s a problem from the borrower side, then they can message via a web3 messaging system likehttps://dm3.network/build-with-dm3 whose mission is: 
+	- "Build with dm3 Add web3 messaging to your dApp The dm3 protocol makes it easy to add messaging capabilities to a dApp. With just a few lines of code, you can integrate our customizable widget. This widget can be used for support chat, in-app communication, or any other type of messaging within the dApp. Whether you want to offer support, facilitate social interactions, or create any other type of in-app communication, the dm3 protocol can help you do it easily and quickly."
 
 15. **SQL Entry:**
    - Upon successful transfer confirmation:
-     - Update the loan status in the database (e.g., `loans` table) to "Funded."
+     - Update the loan status in the database (e.g., `loans` table) to "Loan Sent."
      - Record the loan details in the `loans` table with relevant columns like `borrower_id`, `lender_id`, `amount`, `time_to_repay`, `total_amount_to_pay`, and `status`.
  
 ## The Graph to Check the Blockchain to Confirm SQL Entry##
@@ -183,13 +215,6 @@
 19. Borrower sends back money.
 	1. Prompt for sending it back exists
 20. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
-## Potential Problems
-
-21. What happens if?
-	1. Borrower does something wrong like
-		- Their friend instead of them sends it back
-		- They use a different wallet to send it back
-
 ## Loan Bot to show Loan Information to Lender and its Functionality##
 
 Basic reddit Loanbot documentation: 
@@ -224,3 +249,8 @@ Offering small amounts of credit to individuals who may not have access to tradi
 
 3. **Marketing Potential:**
    - It is Tiktokable. An influencer can be paid $500 to talk to their 100,000 followers to go to Begfi instead of a bank because bank loans are now 9% APR with a mortgage/house as collateral, no-collateral loans are 17%+, but they can still freeze your bank account and go after your assets by re-selling the loan to debt collection agencies.
+
+## Comparison with r/borrow in 2024
+
+1. **Borrower and Lender Base**
+   - Less
