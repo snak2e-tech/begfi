@@ -49,7 +49,7 @@
    - **At the end of The Box Prompt information to be Verified receive a box to go "Next" and the "Next" button takes them to Civic:**
    - Overlaid UI (over begfi) website after "Next button" of Civic over begfi
 	   - https://docs.civic.com/integration-guides/civic-pass/integration-overview/ui-integration
-	   - ![[ภาพถ่ายหน้าจอ 2024-07-20 เวลา 06.36.56.png]]
+	  
      - Prompt user to connect to Civic and verify their "UNIQUENESS" attribute. 
 	     - This takes them from Begfi
      - **Civic Verification Documentation:**
