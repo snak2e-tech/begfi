@@ -175,7 +175,16 @@
 15. **Blockchain Query:**
    - Begfi uses the blockchain's API to query the transaction and confirm if the funds (`$AMOUNTREQUEST`) have been transferred to the smart contract.
    - This query occurs across all loans every 30 seconds.
-   - The cost of this for 5000 loans PER MONTH is $8
+   - The cost of this for 5000 loans PER MONTH is $71 per year since The Graph has 100,000 free monthly queries
+	   - To determine the total monthly cost of querying 5,000 loans every 30 minutes, with an average loan length of 7 days, we start by calculating: 
+		   - the number of queries per loan. 
+			   - Each loan is queried every 30 minutes, resulting in 2 queries per hour, 24 hours a day, for 7 days, yielding 2×24×7=3362 \times 24 \times 7 = 3362×24×7=336 queries per loan. 
+			   - For 5,000 loans, this totals 336×5,000=1,680,000336 \times 5,000 = 1,680,000
+			   - 336×5,000=1,680,000 queries in a week. Extending this to a month (approximating 30 days), we get 1,680,000×307≈7,200,0001,680,000 \times \frac{30}{7} \approx 7,200,0001,680,000×730​≈7,200,000 queries. 
+			   - With 100,000 free queries each month, the chargeable queries amount to 7,200,000−100,000=7,100,000
+			   - At a cost of $0.00001 per query, the total monthly cost is 7,100,000×0.00001=$717,100,000 \times 0.00001 = \$717,100,000×0.00001=$71. 
+			   - Therefore, the total cost per month for querying 5,000 loans every 30 minutes is approximately $71.
+			   - This number would not change if it was 7 days, 30 days, or more for the average loan length
    - If such a situation where 1) total sum does not equal $75 (where the borrower has not paid in full) or has paid in batches so that you just look at all the transactions from person A to person B, between the time when the loan was given and the loan is due, and add the numbers up.
    - Create the query, in The Graph, [https://www.youtube.com/watch?v=EJ2em_QkQWU](https://www.youtube.com/watch?v=EJ2em_QkQWU) (doc video explaining how to create query) whereby it checks every 3 minutes if BORROWER has repaid the loan to the Lender.
 17. **SQL Entry:**
@@ -230,3 +239,105 @@ B. **Market Trends:**
 
 C. **Marketing Potential:**
    - It is Tiktokable. An influencer can be paid $500 to talk to their 100,000 followers to go to Begfi instead of a bank because bank loans are now 9% APR with a mortgage/house as collateral, no-collateral loans are 17%+, but they can still freeze your bank account and go after your assets by re-selling the loan to debt collection agencies.
+
+
+Code References
+
+### Key Points:
+
+1. **Loan Details**:
+    
+    - Loan amount: Specified in USDT.
+    - Expected repayment: Specified amount in USDT (e.g., the borrower asks for 50 USD and is expected to repay 75 USD in 30 days).
+    - Repayment in batches over different days is possible.
+2. **Service Requirements**:
+    
+    - Periodically check (every 5 minutes) if the borrower has sent money to the lender.
+    - Calculate the total amount repaid by the borrower.
+    - Verify if the total repayment meets or exceeds the expected amount.
+    - Determine if the repayment deadline has passed.
+
+### Provided Solution:
+
+1. **Environment Setup**:
+    
+    - Use Node.js with web3.js to interact with the Polygon network.
+    - Use axios to fetch transaction data from the PolygonScan API.
+2. **Script Details**:
+    
+    - Initialize Web3 and connect to the Polygon network.
+    - Set up a polling mechanism to check for transactions every 5 minutes.
+    - Filter transactions to see if payments have been made and calculate the total amount paid.
+    - Check if the total repayment meets or exceeds the expected amount and determine if the repayment deadline has passed.
+    
+To call MATIC RPC:
+
+````
+
+const Web3 = require('web3');
+const axios = require('axios');
+
+// Connect to the Polygon network
+const web3 = new Web3('https://polygon-rpc.com/');
+
+// Addresses and loan details
+const lenderAddress = '0xLenderAddress';
+const borrowerAddress = '0xBorrowerAddress';
+const expectedTotalRepayment = 75; // in USDT
+const repaymentDeadline = new Date('2024-08-01'); // 30 days from the loan start
+
+// USDT contract address on Polygon
+const usdtAddress = '0x3813e82e6f7098b9583FC0F33a962D02018B6803'; // USDT contract address
+
+// Function to check if repayment is complete
+const checkRepayment = async () => {
+    let totalRepaid = 0;
+
+    try {
+        // Get the transaction history for the borrower address
+        const response = await axios.get(`https://api.polygonscan.com/api`, {
+            params: {
+                module: 'account',
+                action: 'tokentx',
+                address: borrowerAddress,
+                startblock: 0,
+                endblock: 'latest',
+                sort: 'asc',
+                apikey: 'YourPolygonScanAPIKey'
+            }
+        });
+
+        const transactions = response.data.result;
+
+        // Filter transactions to the lender address involving USDT
+        const usdtTransactions = transactions.filter(tx => 
+            tx.to.toLowerCase() === lenderAddress.toLowerCase() &&
+            tx.contractAddress.toLowerCase() === usdtAddress.toLowerCase()
+        );
+
+        // Calculate the total amount repaid by the borrower
+        usdtTransactions.forEach(tx => {
+            const valueInUsdt = web3.utils.fromWei(tx.value, 'mwei'); // USDT uses 6 decimals
+            totalRepaid += parseFloat(valueInUsdt);
+        });
+
+        console.log(`Total repaid: $${totalRepaid.toFixed(2)} USDT`);
+
+        // Check if the total repaid amount meets or exceeds the expected repayment
+        if (totalRepaid >= expectedTotalRepayment) {
+            console.log('Loan has been fully repaid.');
+        } else if (new Date() > repaymentDeadline) {
+            console.log('Loan repayment deadline has passed.');
+        } else {
+            console.log('Loan is still being repaid.');
+        }
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+    }
+};
+
+// Polling mechanism to check every 5 minutes
+setInterval(checkRepayment, 5 * 60 * 1000);
+
+// Initial check
+checkRepayment();
