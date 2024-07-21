@@ -74,23 +74,25 @@
 ### Borrower Can See "Need to Borrow" button and Message Board borrow request buttons
 
 6. **Form Display:**
-   - If verified, Begfi displays "You can Request Loans" box prompt and the Borrower Message Request Button and Form go from gray to orange. 
+   - If BORROWER is verified:
+	   - Begfi displays "You can Request Loans" box prompt 
+	   - and the Borrower Message Request Button (on the top of the landing page) goes from gray to orange. 
 
 ### Borrower Posts Request
 
-7. The form to begin a Borrow Request follows a form where users can only enter certain information.
-	1. Amount of money being requested is a numerical value
-	2. Number of days until repayment is a numerical value of days
-	3. Amount to be paid back is a numerical value
-8. Below their profile will be their loan information history (described later in the Loanbot info)
-9. **Request Details:**
-   - In the SQL database, when user enters the following details for the loan request:
-     - Amount requested (`$AMOUNTREQUEST`)
-     - Repayment time (`$TIMEinDAYS`)
-     - Total amount to be repaid (`$AMOUNT2PAY`)
+7. The Borrower Request button is a form to begin a Borrow Request follows a form where users can only enter certain information. 
+8. In the SQL database, when user enters the following details for the loan request:
+	- Amount requested (`$AMOUNTREQUEST`)
+		- Amount of money being requested is a numerical value
+	- Repayment time (`$TIMEinDAYS`)
+		- Number of days until repayment is a numerical value of days
+	2. Total amount to be repaid (`$AMOUNT2PAY`)
+		- Amount to be paid back is a numerical value
+	3. The reason why is a multiple choice option of different reasons in a dropdown.
+9. Below their profile UPON posting the request will be their loan information history (described later in the Loanbot info) so lenders can gauge the borrower's credit worthiness
 
 10. **User History (Existing Borrowers):**
-   - Upon submitting the request, the system (possibly using a background process):
+   - Upon submitting the request, the system:
      - Fetches the borrower's history from the database (assuming tables like `loans` and `borrower_history` exist).
      - Calculates statistics:
        - Number of loans paid off (`X total loans paid off, i.e. $1200 loans paid back`)
@@ -106,9 +108,9 @@
   - Previous history of loans paid back
   - Number of previous loans taken out
   - Number of loans paid back by lenders
-  - [https://redditloans.com/js/components/money.js](https://redditloans.com/js/components/money.js)
-  - view-source:[https://redditloans.com/loan_stats.html](https://redditloans.com/loan_stats.html)
-  - [https://redditloans.com/loans.html](https://redditloans.com/loans.html)
+  -  Examples here of to implement: [https://redditloans.com/js/components/money.js](https://redditloans.com/js/components/money.js)
+	  - view-source:[https://redditloans.com/loan_stats.html](https://redditloans.com/loan_stats.html)
+	  - [https://redditloans.com/loans.html](https://redditloans.com/loans.html)
 
 ## Lender Response
 
@@ -119,13 +121,13 @@
 		   - most recent borrower requests
 		   - borrower requests by size
 		   - first-time borrower requests (because these get higher rewards when a lender successfully lends to them)
+		   - this allows lenders to also scroll through and find people they want to lend to
    - The lender can also see in the message board new borrower requests by just scrolling
 
 11. **Lender Decision:**
    - Lender looks at a borrower's request
-   - The lender decides whether to accept or reject the request.
-   - Once again the request looks like I need to borrow "X" amount of money for "Y" days and will payback "Y" amount because of reason (from a multiple choice dropdown) "Z" reason.
-   - There is a button to send borrower the loan under each username request on the message board
+   - Once again the request looks like BORROWER needs to borrow "X" amount of money for "Y" days and will payback "Y" amount because of reason (from a multiple choice dropdown) "Z" reason.
+   - There is a button to send borrower the loan under each username request on the message board called "Send Loan"
 
 12. What is the Process after Lender accepts request and sends money?
 	- Lender hits the button "Send Loan" 
@@ -133,47 +135,46 @@
 	- After money is sent a box prompt tells Lender they have loaned an amount of money to the borrower, i.e. "Nice job! You have lent "X" username money"
 	- Additional information can include:
 		- Once the loan is paid off how many rewards the lender will receive
-		- **Prompt if they need a notification once the loan is repaid**
-			- Lender can put a messaging service like Telegram to inform them when loan is due. 
-			- Issue: lenders may not want to do notifications though. They're busy people. Likely, no one uses the notifications option.
+		- Lenders receive an additional 25 Beg tokens for a first-time borrower. Lenders receive 20 Beg tokens for second time-borrowers. Third-time borrowers means lenders get 15 Beg tokens. 
+		-  Calculation follows: 
+			'''class RewardsCalculator: def __init__(self): self.new_user_reward = 25 self.second_time_reward = 20 self.third_time_reward = 15 self.subsequent_rewards = 10 def calculate_loan_tokens(self, loan_amount): return loan_amount def calculate_user_rewards(self, borrow_count): if borrow_count == 1: return self.new_user_reward elif borrow_count == 2: return self.second_time_reward elif borrow_count == 3: return self.third_time_reward else: return self.subsequent_rewards def calculate_total_rewards(self, loan_amount, borrow_count): loan_tokens = self.calculate_loan_tokens(loan_amount) user_reward_tokens = self.calculate_user_rewards(borrow_count) return loan_tokens + user_reward_tokens'''
+			- For every dollar of a loan, users receive one Beg token, where 1 Beg token equals 1 dollar. For example, a $100 loan results in 100 Beg tokens. 
+			- For all subsequent loans after the third loan the lender makes, the reward is a flat rate of 10 Beg tokens.  
+				- Example ''usage if __name__ == "__main__": loan_amount = 100  # Example loan amount borrow_count = 1   # Example borrow count (new user) calculator = RewardsCalculator() total_rewards = calculator.calculate_total_rewards(loan_amount, borrow_count) print(f"Total rewards for a loan of ${loan_amount} for a user with {borrow_count} borrow count: {total_rewards} Beg tokens")''' 
+				- Prompt if they need a notification once the loan is repaid # Lender can put a messaging service like Telegram to inform them when loan is due.
+				- Issue: lenders may not want to do notifications though. They're busy people. Likely, no one uses the notifications option.
 
 ## Lender Accepts (Smart Contract & Blockchain)
 
 13. **Lender Approval:**
    - Upon confirmation, the lender submits a transaction via their wallet to approve the loan.
-   -  Money is sent using an actual box called "Send Loan"
-		   - Post-MVP, a stealth wallet method might be possible. But looking at the ecosystem, these seem very early in development. This would be a maximum safety feature.
+			   -  Money is sent using an actual box called "Send Loan"
+				   - Post-MVP, a stealth wallet method might be possible. But looking at the ecosystem, these seem very early in development. This would be a maximum safety feature.
 	   - The QUERY process from the time the button for the Lender to push "Send Loan" occurs follows:
 		-  Wallet opens
 		- Lender confirms
-		- Smart contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request.
-		- The Graph opens a query to check if this has happened:
-			- Typically, projects like Tenderize use The Graph to check APYs (to calculate rewards on a time-average basis)
-				- They sometimes run into problems depending on how they code the APY: https://www.tenderize.me/blog/the-graph-apy-calculation-post-mortem
-				- "**Tenderize calculates the APY by querying our subgraph for the reward periods that happened in the last 30 days.**"
-				- For each reward period, the APY is calculated individually with the average being the resulting APY. Reward periods are not fixed in length or amount of rewards, it’s a recording of the number of rewards that came in since the last event.
-				- Think of The Graph as acting as an on-chain microservice, and calling the subgraph as doing a microservice for a particular part of process
+		- Smart contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request on the Message Board.
+		- After Lender hits "Send Loan" and the loan is sent, the confirmation that it was sent via the blockchain leads to the txn ID being checked
+			- The Graph opens a query to check the txn ID if the amount has been sent, the correct amount has been sent, and to the correct address.
+				- Typically, projects like Tenderize use The Graph to check APYs (to calculate rewards on a time-average basis)
+					- For example, projects sometimes run into problems depending on how they code something like an APY that takes he rewards needed to payout holders: https://www.tenderize.me/blog/the-graph-apy-calculation-post-mortem
+					- "**Tenderize calculates the APY by querying our subgraph for the reward periods that happened in the last 30 days.**"
+					- Therefore, think of The Graph as acting as an on-chain microservice, and calling the subgraph as doing a microservice for a particular part of process
 			- How to Query: https://thegraph.com/docs/en/querying/querying-from-an-application/
 			- Query examples: https://github.com/graphprotocol/query-examples
 			- Tenderize, example: https://thegraph.com/explorer/subgraphs/2ygWAHMhm9tKXm59DN8DdSJ7VNpxrKMkA39Krij4b4tu?view=Query&chain=arbitrum-one
-				- Tenderize calling the Graph: https://github.com/Tenderize/tender-core/blob/06326ec2341da6ddf6269577e91eecf46c3d821b/contracts/tenderizer/integrations/graph/Graph.sol#L83
-					- - `MAX_PPM`: A constant representing 100% in parts per million.
-					- `graph`: Instance of the Graph protocol interface.
-					- `withdrawPool`: Instance of the WithdrawalPools.Pool.
-				- `pendingMigration`: Tracks the amount pending migration.
-			- `newNode`: Address of the new node to migrate to.
-14. The SQL database is updated through a python script fetch and adds The Graph query
+				- Tenderize calling the Graph and newNode`: Address of the new node to migrate to: 
+					- https://github.com/Tenderize/tender-core/blob/06326ec2341da6ddf6269577e91eecf46c3d821b/contracts/tenderizer/integrations/graph/Graph.sol#L83`
+14. After the Query, and the txn ID is confirmed to have gone to the right person, the SQL database is updated:
 			- USERNAME ID of borrower
 			- USERNAME ID of lender
-			- Check if the loan was the correct amount according to what the Lender requested
-			- Check if the loan was sent to the borrower's wallet
-			- If so then the message board is updated as: 
-				- "Loan Disbursed" 
-				- Request" also goes to "Unpaid yet"
-				- When paid back it goes from "Loan paid back "Loan Repaid" and "Request" to "Paid"
-	   
-- No BEG token rewards will be automatically distributed UNTIL after the money is paid back 
-## Blockchain Transaction & SQL Entry
+			- Since the query has checked if the loan was the correct amount according to what the Lender requested, the SQL database updates:
+				 - “Loan Sent"  
+				   - "Not paid"  
+				   - “Paid"
+			- The front-end website also html changes the text in a box next to the borrower to the correct terms "- “Loan Sent" - "Not paid" - “Paid""
+
+## More info on Transaction check via The Graph
 
 15. **Blockchain Query:**
    - Begfi uses the blockchain's API to query the transaction and confirm if the funds (`$AMOUNTREQUEST`) have been transferred to the smart contract.
@@ -189,7 +190,7 @@
 
 16. **SQL Entry:**
    - Upon successful transfer confirmation:
-     - Update the loan status in the database (e.g., `loans` table) to "Loan Sent."
+     - Update the loan status in the database (e.g., `loans` table) 
      - Record the loan details in the `loans` table with relevant columns like `borrower_id`, `lender_id`, `amount`, `time_to_repay`, `total_amount_to_pay`, and `status`.
  
 ## The Graph to Check the Blockchain to Confirm SQL Entry##
@@ -266,8 +267,3 @@ B. **Market Trends:**
 
 C. **Marketing Potential:**
    - It is Tiktokable. An influencer can be paid $500 to talk to their 100,000 followers to go to Begfi instead of a bank because bank loans are now 9% APR with a mortgage/house as collateral, no-collateral loans are 17%+, but they can still freeze your bank account and go after your assets by re-selling the loan to debt collection agencies.
-
-## Comparison with r/borrow in 2024
-
-1. **Borrower and Lender Base**
-   - Less
