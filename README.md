@@ -142,17 +142,35 @@
 13. **Lender Approval:**
    - Upon confirmation, the lender submits a transaction via their wallet to approve the loan.
    -  Money is sent.
-	   - In order for this to work, the Borrower cannot simply send the money to the lender's address. **Therefore, the lender's address should be HIDDEN inside of a box.** 
-	   - ***Neither the lender nor the borrower can see each other's addresses***
-		   - This prevents the borrower from mistakenly using another wallet and entering in the lender's address (because they now know it)
-		   - Using some weird way to actually find the lender's identity by tracing their wallet address
-		   - This is a maximum safety feature
+	   - In order for this to work, the Borrower cannot simply send the money to the lender's address. HE MUST PRESS A BUTTON that says "Repay loan" rather than manually copying an address and sending it back.  However, he could in theory do this anyway and it would still work. From a UI/UX perspective this is why pressing a button is nice:
+		   - **Why should the lender's address should be HIDDEN inside of a box?** 
+			   - ***Neither the lender nor the borrower can see each other's addresses on message board... just a USERNAME***
+				   - This prevents the borrower from mistakenly using another wallet and entering in the lender's address (because they now know it)
+					   - Even though the borrower can see the address in the transaction, we have to assume that newer borrowers probably won't check that.
+					   - Instead if you put the addresses next to profile usernames... 
+						   - Borrowers might mistake that as the thing they need to copy and have a different wallet
+						   - Or, a friend might use that address and send money on the borrower's behalf without the lender ever knowing about it
+		   - Post-MVP, a stealth wallet method might be possible. But looking at the ecosystem, these seem very early in development. This would be a maximum safety feature.
 	   - The QUERY process from the time the button for the Lender to push "Send Loan" occurs follows:
 		-  Wallet opens
 		- Lender confirms
 		- Smart contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request.
-		- The Graph opens a query to check if this has happened
-		- The SQL database is updated through a python script fetch and adds The Graph query
+		- The Graph opens a query to check if this has happened:
+			- Typically, projects like Tenderize use The Graph to check APYs (to calculate rewards on a time-average basis)
+				- They sometimes run into problems depending on how they code the APY: https://www.tenderize.me/blog/the-graph-apy-calculation-post-mortem
+				- "**Tenderize calculates the APY by querying our subgraph for the reward periods that happened in the last 30 days.**"
+				- For each reward period, the APY is calculated individually with the average being the resulting APY. Reward periods are not fixed in length or amount of rewards, it’s a recording of the number of rewards that came in since the last event.
+				- Think of The Graph as acting as an on-chain microservice, and calling the subgraph as doing a microservice for a particular part of process
+			- How to Query: https://thegraph.com/docs/en/querying/querying-from-an-application/
+			- Query examples: https://github.com/graphprotocol/query-examples
+			- Tenderize, example: https://thegraph.com/explorer/subgraphs/2ygWAHMhm9tKXm59DN8DdSJ7VNpxrKMkA39Krij4b4tu?view=Query&chain=arbitrum-one
+				- Tenderize calling the Graph: https://github.com/Tenderize/tender-core/blob/06326ec2341da6ddf6269577e91eecf46c3d821b/contracts/tenderizer/integrations/graph/Graph.sol#L83
+					- - `MAX_PPM`: A constant representing 100% in parts per million.
+					- `graph`: Instance of the Graph protocol interface.
+					- `withdrawPool`: Instance of the WithdrawalPools.Pool.
+				- `pendingMigration`: Tracks the amount pending migration.
+			- `newNode`: Address of the new node to migrate to.
+14. The SQL database is updated through a python script fetch and adds The Graph query
 			- USERNAME ID of borrower
 			- USERNAME ID of lender
 			- Check if the loan was the correct amount according to what the Lender requested
@@ -165,34 +183,34 @@
 - No BEG token rewards will be automatically distributed UNTIL after the money is paid back 
 ## Blockchain Transaction & SQL Entry
 
-14. **Blockchain Query:**
+15. **Blockchain Query:**
    - Begfi uses the blockchain's API to query the transaction and confirm if the funds (`$AMOUNTREQUEST`) have been transferred to the smart contract.
    - This query occurs across all loans every 30 seconds.
    - The cost of this for 5000 loans PER MONTH is $8
    - If such a situation where 1) total sum does not equal $75 (where the borrower has not paid in full) or has paid in batches so that you just look at all the transactions from person A to person B, between the time when the loan was given and the loan is due, and add the numbers up.
-   - Create the query, in The Graph, [https://www.youtube.com/watch?v=EJ2em_QkQWU](https://www.youtube.com/watch?v=EJ2em_QkQWU) (doc video explaining how to create query) whereby it checks every 3 minutes if Lender's wallet has received Borrower's transfer from Borrower's wallet. And if it is in small batches, the entire sum at once, and so on, it sums up and equals the correct amount and therefore creates a trigger:  
+   - Create the query, in The Graph, [https://www.youtube.com/watch?v=EJ2em_QkQWU](https://www.youtube.com/watch?v=EJ2em_QkQWU) (doc video explaining how to create query) whereby it checks every 3 minutes if Lender's wallet has received Borrower's transfer from Borrower's wallet. And if it is in small batches, or the entire sum at once, the bot sums up and equals the correct amount and therefore creates a trigger:  
 	   - “Loan Sent"  
 	   - "Not paid"  
 	   - “Paid"
-- Finally, POST-MVP, In the rare instance that there’s a problem from the borrower side, then they can message via a web3 messaging system likehttps://dm3.network/build-with-dm3 whose mission is: 
+- Finally, POST-MVP, In the rare instance that there’s a problem from the borrower side, then they can message Begfi team via a web3 messaging system widget that is available to borrowers only: https://dm3.network/build-with-dm3 whose mission is: 
 	- "Build with dm3 Add web3 messaging to your dApp The dm3 protocol makes it easy to add messaging capabilities to a dApp. With just a few lines of code, you can integrate our customizable widget. This widget can be used for support chat, in-app communication, or any other type of messaging within the dApp. Whether you want to offer support, facilitate social interactions, or create any other type of in-app communication, the dm3 protocol can help you do it easily and quickly."
 
-15. **SQL Entry:**
+16. **SQL Entry:**
    - Upon successful transfer confirmation:
      - Update the loan status in the database (e.g., `loans` table) to "Loan Sent."
      - Record the loan details in the `loans` table with relevant columns like `borrower_id`, `lender_id`, `amount`, `time_to_repay`, `total_amount_to_pay`, and `status`.
  
 ## The Graph to Check the Blockchain to Confirm SQL Entry##
 
-16. **Cost**:
+17. **Cost**:
   - Documentation: [The Developer's Guide to the Web3 Stack](https://www.infura.io/blog/post/the-developers-guide-to-the-web3-stack)
   - The Graph, why? 
 	  - Web3 app developers opt to pay usage-based query fees to indexers for blockchain data lookups, as this is far more cost-effective than managing the infrastructure themselves. 
 	  - This approach leverages specialization and economies of scale, similar to the rationale behind most SaaS providers. 
 	  - Indexers then distribute these fees among other backend participants, including delegators and curators.
-17.  **What is a Subgraph**:
+18.  **What is a Subgraph**:
   - A subgraph extracts data from a blockchain, processes it, and stores it so that it can be easily queried via GraphQL.
-18. The Graph **Fees**:
+19. The Graph **Fees**:
   - A basic query is estimated to cost $0.00001 each, however, this is ultimately set by indexers indexing your subgraph data. 
 	  - **Compatibility**:
 		  - Compatible with Solana, Polygon, and other chains.
@@ -212,9 +230,9 @@
 
 ## Lender is Paid Back 
 
-19. Borrower sends back money.
-	1. Prompt for sending it back exists
-20. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
+20. Borrower sends back money.
+	-  Prompt for sending it back exists
+21. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
 ## Loan Bot to show Loan Information to Lender and its Functionality##
 
 Basic reddit Loanbot documentation: 
@@ -223,8 +241,9 @@ Basic reddit Loanbot documentation:
 
 - Bot should probably work by taking the total amount owed instead of the initial amount.
   - For example, if the bot would take only $50 but the lender gets repaid $75 USD, then it might be confusing. According to the GitHub documentation of /loanbot, 
-	  - "The LoansBot does not consider interest. A loan is considered repaid when the entire principal has been repaid, regardless of any outstanding interest. This is also reflected on the ban status of users (in most circumstances). 
-	  - So a $100 loan is considered fully repaid when the borrower has returned $100. 
+	  - "The LoansBot does not consider interest:
+		  - A loan is considered repaid when the entire principal has been repaid, regardless of any outstanding interest. This is also reflected on the ban status of users (in most circumstances). 
+		  - So a $100 loan is considered fully repaid when the borrower has returned $100."
 	  - Another way of looking at this is that interest amounts are not considered part of the info relevant to the LoansBot.
 - All loans are in USD. This is not because we discriminate against other currencies, but almost all important stablecoin transactions occur in USD-related stablecoins.
 
@@ -237,20 +256,20 @@ Basic reddit Loanbot documentation:
 
 Offering small amounts of credit to individuals who may not have access to traditional banking. However, the traditional finance (TradFi) space often falls short in terms of accessibility, speed, and cost-effectiveness. Begfi, leveraging the power of blockchain technology and Web3 verification, aims to revolutionize microloans. This document outlines why crypto-based microloans are superior, the importance of Web3 verification, and the potenti
 
-1. **Advantages Over Traditional Platforms:**
+A. **Advantages Over Traditional Platforms:**
    - Unlike LendingClub (down over 95% in stock price), LendingTree, and Prosper, which are all platforms where you invest and they issue loans, these services don't involve peer-to-peer lending. Instead, they act as intermediaries for your transactions.
    - (Venmo/CashApp/ApplePay/PayPal) are more willing to shut down accounts they think are being used to do p2p loans.
 
-2. **Market Trends:**
+B. **Market Trends:**
    - Compared to before, there is a larger base of customers for crypto-based loans worldwide.
    - In the developing world, higher interest rates mean higher bank loan requirement restrictions than ever (due to higher interest rates) that hurt low-income people from getting personal loans.
    - APRs for p2p lending are still very good compared to bonds in MOST countries (a 10% APR arbitrage opportunity).
    - APRs for p2p loans are still LOWER than most bank payday loans.
 
-3. **Marketing Potential:**
+C. **Marketing Potential:**
    - It is Tiktokable. An influencer can be paid $500 to talk to their 100,000 followers to go to Begfi instead of a bank because bank loans are now 9% APR with a mortgage/house as collateral, no-collateral loans are 17%+, but they can still freeze your bank account and go after your assets by re-selling the loan to debt collection agencies.
 
 ## Comparison with r/borrow in 2024
 
-1. **Borrower and Lender Base**
+A. **Borrower and Lender Base**
    - Less
