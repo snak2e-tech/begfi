@@ -144,17 +144,15 @@
 				- Prompt if they need a notification once the loan is repaid # Lender can put a messaging service like Telegram to inform them when loan is due.
 				- Issue: lenders may not want to do notifications though. They're busy people. Likely, no one uses the notifications option.
 
-## Lender Accepts (Smart Contract & Blockchain)
+## Lender Sends Loan (Smart Contract & Blockchain)
 
-13. **Lender Approval:**
+13. **Lender Send Loans:**
    - Upon confirmation, the lender submits a transaction via their wallet to approve the loan.
 			   -  Money is sent using an actual box called "Send Loan"
+			   - This leads to their metamask opening with the exact amount there and the lender approves and the money is sent to the borrower.
 				   - Post-MVP, a stealth wallet method might be possible. But looking at the ecosystem, these seem very early in development. This would be a maximum safety feature.
 	   - The QUERY process from the time the button for the Lender to push "Send Loan" occurs follows:
-		-  Wallet opens
-		- Lender confirms
-		- Smart contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request on the Message Board.
-		- After Lender hits "Send Loan" and the loan is sent, the confirmation that it was sent via the blockchain leads to the txn ID being checked
+		-  After transaction goes through a contract takes the requested amount (`$AMOUNTREQUEST`) from the borrower's request on the Message Board.
 			- The Graph opens a query to check the txn ID if the amount has been sent, the correct amount has been sent, and to the correct address.
 				- Typically, projects like Tenderize use The Graph to check APYs (to calculate rewards on a time-average basis)
 					- For example, projects sometimes run into problems depending on how they code something like an APY that takes he rewards needed to payout holders: https://www.tenderize.me/blog/the-graph-apy-calculation-post-mortem
