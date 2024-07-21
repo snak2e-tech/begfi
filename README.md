@@ -137,10 +137,8 @@
 		- Once the loan is paid off how many rewards the lender will receive
 		- Lenders receive an additional 25 Beg tokens for a first-time borrower. Lenders receive 20 Beg tokens for second time-borrowers. Third-time borrowers means lenders get 15 Beg tokens. 
 		-  Calculation follows: 
-			'''class RewardsCalculator: def __init__(self): self.new_user_reward = 25 self.second_time_reward = 20 self.third_time_reward = 15 self.subsequent_rewards = 10 def calculate_loan_tokens(self, loan_amount): return loan_amount def calculate_user_rewards(self, borrow_count): if borrow_count == 1: return self.new_user_reward elif borrow_count == 2: return self.second_time_reward elif borrow_count == 3: return self.third_time_reward else: return self.subsequent_rewards def calculate_total_rewards(self, loan_amount, borrow_count): loan_tokens = self.calculate_loan_tokens(loan_amount) user_reward_tokens = self.calculate_user_rewards(borrow_count) return loan_tokens + user_reward_tokens'''
 			- For every dollar of a loan, users receive one Beg token, where 1 Beg token equals 1 dollar. For example, a $100 loan results in 100 Beg tokens. 
 			- For all subsequent loans after the third loan the lender makes, the reward is a flat rate of 10 Beg tokens.  
-				- Example ''usage if __name__ == "__main__": loan_amount = 100  # Example loan amount borrow_count = 1   # Example borrow count (new user) calculator = RewardsCalculator() total_rewards = calculator.calculate_total_rewards(loan_amount, borrow_count) print(f"Total rewards for a loan of ${loan_amount} for a user with {borrow_count} borrow count: {total_rewards} Beg tokens")''' 
 				- Prompt if they need a notification once the loan is repaid # Lender can put a messaging service like Telegram to inform them when loan is due.
 				- Issue: lenders may not want to do notifications though. They're busy people. Likely, no one uses the notifications option.
 
@@ -179,28 +177,29 @@
    - This query occurs across all loans every 30 seconds.
    - The cost of this for 5000 loans PER MONTH is $8
    - If such a situation where 1) total sum does not equal $75 (where the borrower has not paid in full) or has paid in batches so that you just look at all the transactions from person A to person B, between the time when the loan was given and the loan is due, and add the numbers up.
-   - Create the query, in The Graph, [https://www.youtube.com/watch?v=EJ2em_QkQWU](https://www.youtube.com/watch?v=EJ2em_QkQWU) (doc video explaining how to create query) whereby it checks every 3 minutes if Lender's wallet has received Borrower's transfer from Borrower's wallet. And if it is in small batches, or the entire sum at once, the bot sums up and equals the correct amount and therefore creates a trigger:  
-	   - “Loan Sent"  
-	   - "Not paid"  
-	   - “Paid"
-- Finally, POST-MVP, In the rare instance that there’s a problem from the borrower side, then they can message Begfi team via a web3 messaging system widget that is available to borrowers only: https://dm3.network/build-with-dm3 whose mission is: 
-	- "Build with dm3 Add web3 messaging to your dApp The dm3 protocol makes it easy to add messaging capabilities to a dApp. With just a few lines of code, you can integrate our customizable widget. This widget can be used for support chat, in-app communication, or any other type of messaging within the dApp. Whether you want to offer support, facilitate social interactions, or create any other type of in-app communication, the dm3 protocol can help you do it easily and quickly."
-
-16. **SQL Entry:**
+   - Create the query, in The Graph, [https://www.youtube.com/watch?v=EJ2em_QkQWU](https://www.youtube.com/watch?v=EJ2em_QkQWU) (doc video explaining how to create query) whereby it checks every 3 minutes if BORROWER has repaid the loan to the Lender.
+17. **SQL Entry:**
    - Upon successful transfer confirmation:
      - Update the loan status in the database (e.g., `loans` table) 
      - Record the loan details in the `loans` table with relevant columns like `borrower_id`, `lender_id`, `amount`, `time_to_repay`, `total_amount_to_pay`, and `status`.
-## Lender is Paid Back 
+	 - Front-end updates to indicate the wallet has received the borrower's transfer from the borrower's wallet. If the transfer is in small batches, it triggers the front-end to update to:
+		   - "Loan Sent"
+		   - "Not Paid"
+		   - "Paid"
+## The Borrower Repays Loan / Lender is Paid Back and Potential Post-MVP Messaging System from Borrower to the Team
 
-17. Borrower sends back money.
-	-  Prompt for sending it back exists
-18. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
-19. In order for this to work, the Borrower cannot simply send the money to the lender's address, i.e. copy the address of the lender and send money. Although, it would work and The Graph will still get the correct data... however, the box "Repay loan" should exist because:
-	1. ***Neither the lender nor the borrower should see each other's addresses on message board... just a USERNAME***
-				   - This prevents the borrower from mistakenly finding the address (extra info) and using another wallet and entering in the lender's address (because they now know it)
-				   - Even though the borrower can see the address in the transaction, we have to assume that newer borrowers probably won't check the address in his wallet.
-				   - Also, borrowers might mistake that as the thing they need to copy it.
-				   - Or, the borrower's friend might use that address and send money on the borrower's behalf without the lender ever knowing about it
+18. Borrower sends back money.
+	-  Prompt for sending it back exists called "Pay Back Lender"
+	- After money has been sent by the borrower then a notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
+19. The query sums up and equals the correct amount and therefore creates a trigger to make sure the SQL database changes.
+	- This is done through a microservice like calculation in The Graph
+20.  To ensure this process works correctly, the borrower must not directly send money to the lender’s address by copying it and initiating a transfer. While this method technically works and The Graph will still receive accurate data, the BORROWER must repay the loan via the designated button. This is crucial because neither the lender nor the borrower should see each other’s addresses on the message board, only their usernames. This prevents several issues:
+	- The borrower might accidentally find and use the lender’s address with a different wallet.
+	- Even though the borrower can see the address in the transaction, we assume that newer borrowers may not check the address in their wallet.
+	- Borrowers might mistakenly think they need to copy the address for repayment.
+	- A borrower’s friend could use the address and send money on the borrower’s behalf without the lender knowing.
+21. Finally, post-MVP, in the rare case that there’s an issue from the borrower’s side, they can contact the Begfi team through a web3 messaging system widget available exclusively to borrowers: [dm3 network](https://dm3.network/build-with-dm3). The mission of this system is to:
+	- "Build with dm3: Add web3 messaging to your dApp. The dm3 protocol simplifies adding messaging capabilities to a dApp. With just a few lines of code, you can integrate our customizable widget. This widget can be used for support chat, in-app communication, or any other type of messaging within the dApp. Whether you want to offer support, facilitate social interactions, or create any other type of in-app communication, the dm3 protocol can help you do it easily and quickly."
 ## Loan Bot to show Loan Information to Lender and its Functionality##
 
 Basic reddit Loanbot documentation: 
