@@ -192,41 +192,12 @@
    - Upon successful transfer confirmation:
      - Update the loan status in the database (e.g., `loans` table) 
      - Record the loan details in the `loans` table with relevant columns like `borrower_id`, `lender_id`, `amount`, `time_to_repay`, `total_amount_to_pay`, and `status`.
- 
-## The Graph to Check the Blockchain to Confirm SQL Entry##
-
-17. **Cost**:
-  - Documentation: [The Developer's Guide to the Web3 Stack](https://www.infura.io/blog/post/the-developers-guide-to-the-web3-stack)
-  - The Graph, why? 
-	  - Web3 app developers opt to pay usage-based query fees to indexers for blockchain data lookups, as this is far more cost-effective than managing the infrastructure themselves. 
-	  - This approach leverages specialization and economies of scale, similar to the rationale behind most SaaS providers. 
-	  - Indexers then distribute these fees among other backend participants, including delegators and curators.
-18.  **What is a Subgraph**:
-  - A subgraph extracts data from a blockchain, processes it, and stores it so that it can be easily queried via GraphQL.
-19. The Graph **Fees**:
-  - A basic query is estimated to cost $0.00001 each, however, this is ultimately set by indexers indexing your subgraph data. 
-	  - **Compatibility**:
-		  - Compatible with Solana, Polygon, and other chains.
-  - Free 100,000 queries PER MONTH. https://thegraph.com/docs/en/billing/ 
-	  - Imagine 1000 borrowers. 1000 lenders. This equals 2000. This is for each borrower/lender action. 
-		  - Payment/lending TO is one action.
-		  - Receiving funds and funds paid is one action.
-	  - If begfi processes 1000 loans that are paid back, this means 2000 blockchain queries. 
-	  - We would pay $.02 on the 5,100th loan that is paid back (because the first 100,000 queries PER MONTH are free) in one month.
-		  - This means a potential loan volume averaging $5,000,000 and paying $.02 for it for The Graph fees
-		  - Why is a The Graph, "Subgraph needed? 
-			  - Indexers set the prices for their services, and the gateway allocates queries based on market conditions, technical parameters such as latency, and the preferences of the user making the request. 
-			  - Currently, a standard cost model is configured at 0.00005 DAI per query, which aligns with the average pricing for the subgraphs being indexed and verified.
-		  - GRT tokens need to be in Arbitrium.
-			  - **How Paid**:
-			  - [The Graph’s Billing System](https://thegraph.com/docs/en/arbitrum/arbitrum-faq/): "The Graph’s billing system accepts GRT on Arbitrum, and users will need ETH on Arbitrum to pay their gas. While The Graph protocol started on Ethereum Mainnet, all activity, including the billing contracts, is now on Arbitrum One."
-
 ## Lender is Paid Back 
 
-20. Borrower sends back money.
+17. Borrower sends back money.
 	-  Prompt for sending it back exists
-21. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
-22. In order for this to work, the Borrower cannot simply send the money to the lender's address, i.e. copy the address of the lender and send money. Although, it would work and The Graph will still get the correct data... however, the box "Repay loan" should exist because:
+18. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
+19. In order for this to work, the Borrower cannot simply send the money to the lender's address, i.e. copy the address of the lender and send money. Although, it would work and The Graph will still get the correct data... however, the box "Repay loan" should exist because:
 	1. ***Neither the lender nor the borrower should see each other's addresses on message board... just a USERNAME***
 				   - This prevents the borrower from mistakenly finding the address (extra info) and using another wallet and entering in the lender's address (because they now know it)
 				   - Even though the borrower can see the address in the transaction, we have to assume that newer borrowers probably won't check the address in his wallet.
@@ -245,11 +216,6 @@ Basic reddit Loanbot documentation:
 		  - So a $100 loan is considered fully repaid when the borrower has returned $100."
 	  - Another way of looking at this is that interest amounts are not considered part of the info relevant to the LoansBot.
 - All loans are in USD. This is not because we discriminate against other currencies, but almost all important stablecoin transactions occur in USD-related stablecoins.
-
-## Additional Considerations
-
-- **Security:** Implement robust security measures for user data, transactions, and smart contract interactions.
-- **Error Handling:** Implement proper error handling mechanisms to gracefully handle unexpected situations. Probably would need someone to moderate the message boards and respond to issues via Discord. 
 
 ## Reasons Why Begfi Should Succeed
 
