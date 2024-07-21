@@ -141,15 +141,7 @@
 
 13. **Lender Approval:**
    - Upon confirmation, the lender submits a transaction via their wallet to approve the loan.
-   -  Money is sent.
-	   - In order for this to work, the Borrower cannot simply send the money to the lender's address. HE MUST PRESS A BUTTON that says "Repay loan" rather than manually copying an address and sending it back.  However, he could in theory do this anyway and it would still work. From a UI/UX perspective this is why pressing a button is nice:
-		   - **Why should the lender's address should be HIDDEN inside of a box?** 
-			   - ***Neither the lender nor the borrower can see each other's addresses on message board... just a USERNAME***
-				   - This prevents the borrower from mistakenly using another wallet and entering in the lender's address (because they now know it)
-					   - Even though the borrower can see the address in the transaction, we have to assume that newer borrowers probably won't check that.
-					   - Instead if you put the addresses next to profile usernames... 
-						   - Borrowers might mistake that as the thing they need to copy and have a different wallet
-						   - Or, a friend might use that address and send money on the borrower's behalf without the lender ever knowing about it
+   -  Money is sent using an actual box called "Send Loan"
 		   - Post-MVP, a stealth wallet method might be possible. But looking at the ecosystem, these seem very early in development. This would be a maximum safety feature.
 	   - The QUERY process from the time the button for the Lender to push "Send Loan" occurs follows:
 		-  Wallet opens
@@ -233,6 +225,12 @@
 20. Borrower sends back money.
 	-  Prompt for sending it back exists
 21. Notification at the end of the payment date via The Graph, API fetch if loan has been paid back by showing if address of borrower has sent money to address of lender
+22. In order for this to work, the Borrower cannot simply send the money to the lender's address, i.e. copy the address of the lender and send money. Although, it would work and The Graph will still get the correct data... however, the box "Repay loan" should exist because:
+	1. ***Neither the lender nor the borrower should see each other's addresses on message board... just a USERNAME***
+				   - This prevents the borrower from mistakenly finding the address (extra info) and using another wallet and entering in the lender's address (because they now know it)
+				   - Even though the borrower can see the address in the transaction, we have to assume that newer borrowers probably won't check the address in his wallet.
+				   - Also, borrowers might mistake that as the thing they need to copy it.
+				   - Or, the borrower's friend might use that address and send money on the borrower's behalf without the lender ever knowing about it
 ## Loan Bot to show Loan Information to Lender and its Functionality##
 
 Basic reddit Loanbot documentation: 
@@ -256,7 +254,7 @@ Basic reddit Loanbot documentation:
 
 Offering small amounts of credit to individuals who may not have access to traditional banking. However, the traditional finance (TradFi) space often falls short in terms of accessibility, speed, and cost-effectiveness. Begfi, leveraging the power of blockchain technology and Web3 verification, aims to revolutionize microloans. This document outlines why crypto-based microloans are superior, the importance of Web3 verification, and the potenti
 
-A. **Advantages Over Traditional Platforms:**
+A.  **Advantages Over Traditional Platforms:**
    - Unlike LendingClub (down over 95% in stock price), LendingTree, and Prosper, which are all platforms where you invest and they issue loans, these services don't involve peer-to-peer lending. Instead, they act as intermediaries for your transactions.
    - (Venmo/CashApp/ApplePay/PayPal) are more willing to shut down accounts they think are being used to do p2p loans.
 
@@ -271,5 +269,5 @@ C. **Marketing Potential:**
 
 ## Comparison with r/borrow in 2024
 
-A. **Borrower and Lender Base**
+1. **Borrower and Lender Base**
    - Less
