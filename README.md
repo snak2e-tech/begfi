@@ -13,7 +13,17 @@
 
 ### Initial Steps:
    - Borrower gets to the website.
-   - Before registration and username account creation, they are prompted to connect wallet via Sign In With Ethereum (SIWE): [https://docs.login.xyz/](https://docs.login.xyz/)
+   - Before registration and username account creation, they are prompted to connect wallet via Sign In With Ethereum (SIWE): 
+
+https://portal.thirdweb.com/connect/auth
+
+
+https://playground.thirdweb.com/connect/sign-in
+
+https://portal.thirdweb.com/typescript/v5/react/components/ConnectButton
+
+https://thirdweb.com/login?next=%2Fdashboard%2Fconnect%2Fplayground
+
    
 2.  **Become a Borrower:**
    - User chooses the "Borrower" option. The borrower button is on the top of the page.
